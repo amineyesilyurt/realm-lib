@@ -12,6 +12,11 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Realm realm = Realm.getDefaultInstance(); // opens "myrealm.realm"
+        try {
+            // ... Do something ...
+        } finally {
+            realm.close();
+        }
     }
 }
