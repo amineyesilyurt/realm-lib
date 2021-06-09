@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
@@ -18,6 +19,7 @@ import io.realm.RealmResults;
 import lombok.ToString;
 
 public class MainActivity extends AppCompatActivity {
+    ListView listView;
     Realm realm;
     EditText username, name, pass;
     Button button;
@@ -27,21 +29,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         realm = Realm.getDefaultInstance(); // opens "myrealm.realm"
+        defining();
+        insert();
+        show();
 
-        try {
-            defining();
-            insert();
-
-/*           addPerson();
-           showPersons();*/
-        } finally {
-          // realm.close();
-        }
     }
 
 
 
     public void defining(){
+        listView=findViewById(R.id.listView);
         username=findViewById(R.id.editTextUserName);
         name=findViewById(R.id.editTextName);
         pass=findViewById(R.id.editTextPass);
@@ -72,9 +69,12 @@ public class MainActivity extends AppCompatActivity {
     private void show() {
         realm.beginTransaction();
         RealmResults<PersonInfos> results = realm.where(PersonInfos.class).findAll();
-        for(PersonInfos p:results)
-            Log.i("Added", p.toString());
         realm.commitTransaction();
+        if(results.size()>0) {
+            Adapter adapter = new Adapter(results,getApplicationContext());
+            listView.setAdapter(adapter);
+
+        }
     }
     private void transaction(String theName, String theUsername, String thePass, String theSex) {
         realm.beginTransaction();
