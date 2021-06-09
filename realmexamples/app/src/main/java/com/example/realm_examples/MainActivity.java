@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -32,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         defining();
         insert();
         show();
-
+        findItem();
     }
 
 
@@ -105,5 +106,22 @@ public class MainActivity extends AppCompatActivity {
         }
         realm.commitTransaction();
 
+    }
+
+    public void findItem(){
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                deleteItem(position);
+            }
+        });
+    }
+    public void deleteItem(int position){
+        realm.beginTransaction();
+        RealmResults<PersonInfos> personList = realm.where(PersonInfos.class).findAll();
+        PersonInfos person=personList.get(position);
+        person.deleteFromRealm();
+        realm.commitTransaction();
+        show();
     }
 }
