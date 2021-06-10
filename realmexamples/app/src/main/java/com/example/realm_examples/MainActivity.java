@@ -3,9 +3,11 @@ package com.example.realm_examples;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -14,6 +16,8 @@ import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+
+import java.util.zip.Inflater;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -33,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         defining();
         insert();
         show();
-        findItem();
+        delete();
     }
 
 
@@ -71,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
         realm.beginTransaction();
         RealmResults<PersonInfos> results = realm.where(PersonInfos.class).findAll();
         realm.commitTransaction();
-        if(results.size()>0) {
+        if(results.size()>=0) {
             Adapter adapter = new Adapter(results,getApplicationContext());
             listView.setAdapter(adapter);
 
@@ -108,11 +112,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void findItem(){
+    public void delete(){
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                deleteItem(position);
+                createDialog(position);
             }
         });
     }
@@ -123,5 +127,32 @@ public class MainActivity extends AppCompatActivity {
         person.deleteFromRealm();
         realm.commitTransaction();
         show();
+    }
+
+    public void createDialog(int position){
+        LayoutInflater layoutInflater= getLayoutInflater();
+        View view= layoutInflater.inflate(R.layout.alertlayout,null);
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        Button yesBtn= view.findViewById(R.id.btnYes);
+        Button btnNo = view.findViewById(R.id.btnNo);
+        alert.setView(view);
+        alert.setCancelable(false);
+
+        AlertDialog dialog = alert.create();
+
+        yesBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteItem(position);
+                dialog.cancel();
+            }
+        });
+        btnNo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.cancel();
+            }
+        });
+        dialog.show();
     }
 }
