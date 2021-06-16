@@ -28,7 +28,9 @@ public class MainActivity extends AppCompatActivity {
     Realm realm;
     EditText username, name, pass;
     Button button;
+    Button btnUpdate;
     RadioGroup sexRG;
+    int updatePosition;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
         insert();
         show();
         delete();
+        update();
     }
 
 
@@ -49,25 +52,23 @@ public class MainActivity extends AppCompatActivity {
         pass=findViewById(R.id.editTextPass);
         sexRG=findViewById(R.id.SexRadio);
         button=(Button)findViewById(R.id.btnAdd);
+        btnUpdate= findViewById(R.id.btnUpdate);
 
     }
-
+    public PersonInfos getInfosFromApp(){
+        String username_= username.getText().toString();
+        String name_= name.getText().toString();
+        String pass_= pass.getText().toString();
+        RadioButton radioButton_=findViewById(sexRG.getCheckedRadioButtonId());
+        String sex_ = radioButton_.getText().toString();
+        return new PersonInfos(username_,name_,sex_,pass_);
+    }
     public void insert(){
-
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String username_= username.getText().toString();
-                String name_= name.getText().toString();
-                String pass_= pass.getText().toString();
-                RadioButton radioButton_=findViewById(sexRG.getCheckedRadioButtonId());
-                String sex_ = radioButton_.getText().toString();
-                transaction(name_,username_,pass_,sex_);
-                username.setText("");
-                name.setText("");
-                pass.setText("");
-                sexRG.clearCheck();
-                show();
+                transaction();
+                clearAndRefreshScreen();
             }
         });
     }
@@ -81,42 +82,51 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
-    private void transaction(String theName, String theUsername, String thePass, String theSex) {
+    private void transaction() {
         realm.beginTransaction();
+        PersonInfos addThisPerson = getInfosFromApp();
         PersonInfos infos = realm.createObject(PersonInfos.class);
-        infos.setName(theName);
-        infos.setUsername(theUsername);
-        infos.setPass(thePass);
-        infos.setSex(theSex);
+        infos.setName(addThisPerson.getName());
+        infos.setUsername(addThisPerson.getUsername());
+        infos.setSex(addThisPerson.getSex());
+        infos.setPass(addThisPerson.getPass());
         realm.commitTransaction();
     }
 
 
-    public void addPerson(){
-        realm.beginTransaction();
-        PersonTable person= realm.createObject(PersonTable.class);
-        person.setName("John");
-        person.setSurname("Bill");
-        person.setAge("24");
-        person.setDegree("B.S.");
-        realm.commitTransaction();
-    }
-
-    public void showPersons(){
-        realm.beginTransaction();
-        RealmResults<PersonTable> results= realm.where(PersonTable.class).findAll();
-        for(PersonTable p:results){
-            Log.i("Out",p.toString());
-        }
-        realm.commitTransaction();
-
+    public void update(){
+        btnUpdate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RealmResults<PersonInfos> list= realm.where(PersonInfos.class).findAll();
+                PersonInfos person = list.get(updatePosition);
+                PersonInfos updatedPerson=getInfosFromApp();
+                realm.beginTransaction();
+                person.setUsername(updatedPerson.getUsername());
+                person.setName(updatedPerson.getName());
+                person.setPass(updatedPerson.getPass());
+                person.setSex(updatedPerson.getSex());
+                realm.commitTransaction();
+                show();
+            }
+        });
     }
 
     public void delete(){
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            RealmResults<PersonInfos> list= realm.where(PersonInfos.class).findAll();
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 createDialog(position);
+                updatePosition=position;
+                username.setText(list.get(position).getUsername());
+                name.setText(list.get(position).getName());
+                pass.setText(list.get(position).getPass());
+                if(list.get(position).getSex().equals("Female")){
+                    ((RadioButton)sexRG.getChildAt(0)).setChecked(true);
+                }else{
+                    ((RadioButton)sexRG.getChildAt(1)).setChecked(true);
+                }
             }
         });
     }
@@ -126,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
         PersonInfos person=personList.get(position);
         person.deleteFromRealm();
         realm.commitTransaction();
-        show();
+        clearAndRefreshScreen();
     }
 
     public void createDialog(int position){
@@ -155,4 +165,33 @@ public class MainActivity extends AppCompatActivity {
         });
         dialog.show();
     }
+
+    public void clearAndRefreshScreen(){
+        username.setText("");
+        name.setText("");
+        pass.setText("");
+        sexRG.clearCheck();
+        show();
+    }
+    /*
+    public void addPerson(){
+        realm.beginTransaction();
+        PersonTable person= realm.createObject(PersonTable.class);
+        person.setName("John");
+        person.setSurname("Bill");
+        person.setAge("24");
+        person.setDegree("B.S.");
+        realm.commitTransaction();
+    }
+
+    public void showPersons(){
+        realm.beginTransaction();
+        RealmResults<PersonTable> results= realm.where(PersonTable.class).findAll();
+        for(PersonTable p:results){
+            Log.i("Out",p.toString());
+        }
+        realm.commitTransaction();
+
+    }
+*/
 }
